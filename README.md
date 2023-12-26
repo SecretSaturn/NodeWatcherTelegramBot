@@ -14,7 +14,7 @@ This project includes a Python script for monitoring the status of nodes and sen
 1. Clone the repository:
 
 ```
-git clone https://github.com/SecretSaturn/NodeWatcherTelegramBotelegramBot
+git clone https://github.com/SecretSaturn/NodeWatcherTelegramBot
 cd NodeWatcherTelegramBot
 ```
 
@@ -22,11 +22,18 @@ cd NodeWatcherTelegramBot
 ```
 pip install aiohttp python-telegram-bot python-dotenv python-dateutil
 ```
+
 3. Create a `.env` file based on the `.env.example`:
 ```
 cp .env.example .env
 ```
 Then, edit `.env` with your actual configuration values.
+
+4. Create a `Nodelist.txt` file based on the `NodeList.txt.example`:
+```
+cp NodeList.txt.example NodeList.txt
+```
+Then, edit `NodeList.txt` with your actual node IPs.
 
 ### Running the Bot
 
