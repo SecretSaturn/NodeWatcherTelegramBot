@@ -122,7 +122,7 @@ async def handle_message(update: Update, context: CallbackContext):
     
      # Check for "/fullautoreport" command
     elif f"@{bot_username}" in message_text and "/fullautoreport" in message_text:
-        await autoreport(update,context)
+        await fullautoreport(update,context)
 
     # Check for "/status" command
     elif f"@{bot_username}" in message_text and "/status" in message_text:
@@ -157,7 +157,7 @@ async def autoreport(update: Update, context: CallbackContext):
 async def fullautoreport(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     if chat_id not in user_threads:
-        thread = threading.Thread(target=start_periodic_task_for_user, args=(chat_id, False))
+        thread = threading.Thread(target=start_periodic_task_for_user, args=(chat_id, True))
         thread.start()
         user_threads[chat_id] = thread
         await context.bot.send_message(chat_id=chat_id, text="Full Auto-reporting started.")
