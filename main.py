@@ -92,16 +92,16 @@ async def start(update: Update, context: CallbackContext):
 # Global dictionary to keep track of users and their associated threads
 user_threads = {}
 
-async def auto_report_for_user(chat_id):
+async def auto_report_for_user(chat_id, report_all):
     while True:
-        message = await check_nodes(urls, False)
+        message = await check_nodes(urls, report_all)
         if message:
             result = await ApplicationBuilder().token(bot_token).build().bot.send_message(chat_id=chat_id, text=message, parse_mode="markdown")
         await asyncio.sleep(update_time)
 
-def start_periodic_task_for_user(chat_id):
+def start_periodic_task_for_user(chat_id, report_all):
     async def task():
-        await auto_report_for_user(chat_id)
+        await auto_report_for_user(chat_id, report_all)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -119,26 +119,58 @@ async def handle_message(update: Update, context: CallbackContext):
     # Check for "/autoreport" command
     elif f"@{bot_username}" in message_text and "/autoreport" in message_text:
         await autoreport(update,context)
+    
+     # Check for "/fullautoreport" command
+    elif f"@{bot_username}" in message_text and "/fullautoreport" in message_text:
+        await autoreport(update,context)
 
     # Check for "/status" command
     elif f"@{bot_username}" in message_text and "/status" in message_text:
         await status(update,context)
 
+    # Check for "/cancelautoreport" command
+    elif f"@{bot_username}" in message_text and "/cancelautoreport" in message_text:
+        await status(update,context)
+
+
+async def cancel_autoreport(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    if chat_id in user_threads:
+        # Terminate the thread and remove from the dictionary
+        user_threads[chat_id].do_run = False
+        user_threads[chat_id].join()
+        del user_threads[chat_id]
+        await context.bot.send_message(chat_id=chat_id, text="Auto-reporting cancelled.")
+    else:
+        await context.bot.send_message(chat_id=chat_id, text="You are not subscribed to auto-reporting.")
+
 async def autoreport(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     if chat_id not in user_threads:
-        thread = threading.Thread(target=start_periodic_task_for_user, args=(chat_id,))
+        thread = threading.Thread(target=start_periodic_task_for_user, args=(chat_id, False))
         thread.start()
         user_threads[chat_id] = thread
         await context.bot.send_message(chat_id=chat_id, text="Auto-reporting started.")
     else:
         await context.bot.send_message(chat_id=chat_id, text="You are already subscribed to auto-reporting.")
 
+async def fullautoreport(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    if chat_id not in user_threads:
+        thread = threading.Thread(target=start_periodic_task_for_user, args=(chat_id, False))
+        thread.start()
+        user_threads[chat_id] = thread
+        await context.bot.send_message(chat_id=chat_id, text="Full Auto-reporting started.")
+    else:
+        await context.bot.send_message(chat_id=chat_id, text="You are already subscribed to full auto-reporting.")
+
 def main():
     application = ApplicationBuilder().token(bot_token).build()
     application.add_handler(CommandHandler('status', status))
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('autoreport', autoreport))
+    application.add_handler(CommandHandler('fullautoreport', autoreport))
+    application.add_handler(CommandHandler('cancelautoreport', cancel_autoreport))
     message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message)
     application.add_handler(message_handler)
 
