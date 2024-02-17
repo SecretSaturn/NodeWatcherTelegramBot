@@ -73,8 +73,10 @@ async def status(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     message = await check_nodes(urls, True)
     if message:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="markdown")
-        # Command handler for /status, modified for user-specific URLs
+        try:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="markdown")
+        except Exception as e:
+            logging.error(f"Error in status function: {e}")
 
 async def start(update: Update, context: CallbackContext):
     try:
@@ -96,7 +98,10 @@ async def auto_report_for_user(chat_id, report_all):
     while True:
         message = await check_nodes(urls, report_all)
         if message:
-            result = await ApplicationBuilder().token(bot_token).build().bot.send_message(chat_id=chat_id, text=message, parse_mode="markdown")
+            try:
+                await ApplicationBuilder().token(bot_token).build().bot.send_message(chat_id=chat_id, text=message, parse_mode="markdown")
+            except Exception as e:
+                logging.error(f"Error in auto_report_for_user function: {e}")
         await asyncio.sleep(update_time)
 
 def start_periodic_task_for_user(chat_id, report_all):
@@ -140,9 +145,15 @@ async def cancel_autoreport(update: Update, context: CallbackContext):
         user_threads[chat_id].do_run = False
         user_threads[chat_id].join()
         del user_threads[chat_id]
-        await context.bot.send_message(chat_id=chat_id, text="Auto-reporting cancelled.")
+        try:
+            await context.bot.send_message(chat_id=chat_id, text="Auto-reporting cancelled.")
+        except Exception as e:
+            logging.error(f"Error in cancel_autoreport function: {e}")
     else:
-        await context.bot.send_message(chat_id=chat_id, text="You are not subscribed to auto-reporting.")
+        try:
+            await context.bot.send_message(chat_id=chat_id, text="You are not subscribed to auto-reporting.")
+        except Exception as e:
+            logging.error(f"Error in cancel_autoreport function: {e}")
 
 async def autoreport(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
@@ -150,9 +161,15 @@ async def autoreport(update: Update, context: CallbackContext):
         thread = threading.Thread(target=start_periodic_task_for_user, args=(chat_id, False))
         thread.start()
         user_threads[chat_id] = thread
-        await context.bot.send_message(chat_id=chat_id, text="Auto-reporting started.")
+        try:
+            await context.bot.send_message(chat_id=chat_id, text="Auto-reporting started.")
+        except Exception as e:
+            logging.error(f"Error in autoreport function: {e}")
     else:
-        await context.bot.send_message(chat_id=chat_id, text="You are already subscribed to auto-reporting.")
+        try:
+            await context.bot.send_message(chat_id=chat_id, text="You are already subscribed to auto-reporting.")
+        except Exception as e:
+            logging.error(f"Error in autoreport function: {e}")
 
 async def fullautoreport(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
@@ -160,9 +177,15 @@ async def fullautoreport(update: Update, context: CallbackContext):
         thread = threading.Thread(target=start_periodic_task_for_user, args=(chat_id, True))
         thread.start()
         user_threads[chat_id] = thread
-        await context.bot.send_message(chat_id=chat_id, text="Full Auto-reporting started.")
+        try:
+            await context.bot.send_message(chat_id=chat_id, text="Full Auto-reporting started.")
+        except Exception as e:
+            logging.error(f"Error in fullautoreport function: {e}")
     else:
-        await context.bot.send_message(chat_id=chat_id, text="You are already subscribed to full auto-reporting.")
+        try: 
+            await context.bot.send_message(chat_id=chat_id, text="You are already subscribed to full auto-reporting.")
+        except Exception as e:
+            logging.error(f"Error in fullautoreport function: {e}")
 
 def main():
     application = ApplicationBuilder().token(bot_token).build()
